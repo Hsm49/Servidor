@@ -1,34 +1,27 @@
 package com.example.servidor;
 
-import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.Context;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
+import java.io.*;
+import java.net.*;
+import android.app.*;
+import android.os.*;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.net.UnknownHostException;
 
 public class MainActivity extends Activity {
     private Socket client;
     private PrintWriter printwriter;
     private BufferedReader bufferedReader;
     private ProgressDialog pDialog;
-    String host;
-    int port;
+    String host = "your_host"; // Reemplaza "your_host" con el host adecuado
+    int port = 4444; // Cambia el puerto si es necesario
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        host = "your_host"; // Reemplaza "your_host" con el host adecuado
+        port = 4444; // Cambia el puerto si es necesario
     }
 
     private class ChatOperator extends AsyncTask<Void, Void, Void> {
@@ -41,28 +34,40 @@ public class MainActivity extends Activity {
                     InputStreamReader inputStreamReader = new InputStreamReader(client.getInputStream());
                     bufferedReader = new BufferedReader(inputStreamReader);
                 } else {
-                    System.out.println("Server has not been started on port 4444.");
+                    System.out.println("El servidor no se ha iniciado en el puerto 4444.");
                 }
             } catch (UnknownHostException e) {
-                System.out.println("Failed to connect server " + host);
+                System.out.println("Error al conectar con el servidor " + host);
                 e.printStackTrace();
             } catch (IOException e) {
-                System.out.println("Failed to connect server " + host);
+                System.out.println("Error al conectar con el servidor " + host);
                 e.printStackTrace();
             }
             return null;
         }
 
+
         @Override
         protected void onPostExecute(Void result) {
-            final Sender messageSender = new Sender(client);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                messageSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            } else {
-                messageSender.execute();
+            if (client != null) {
+                try {
+                    printwriter = new PrintWriter(client.getOutputStream(), true);
+                    InputStreamReader inputStreamReader = new InputStreamReader(client.getInputStream());
+                    bufferedReader = new BufferedReader(inputStreamReader);
+
+                    final Sender messageSender = new Sender();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                        messageSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    } else {
+                        messageSender.execute();
+                    }
+
+                    Receiver receiver = new Receiver();
+                    receiver.execute();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            Receiver receiver = new Receiver();
-            receiver.execute();
         }
     }
 
@@ -70,56 +75,44 @@ public class MainActivity extends Activity {
         private String message;
 
         @Override
-        protected Void doInBackground(Void... arg0) {
-            try {
-                client = new Socket(host, port);
-                if (client != null) {
-                    printwriter = new PrintWriter(client.getOutputStream(), true);
-                    InputStreamReader inputStreamReader = new InputStreamReader(client.getInputStream());
-                    bufferedReader = new BufferedReader(inputStreamReader);
-                } else {
-                    Log.e("Connection Error", "Failed to connect to server on port " + port);
+        protected Void doInBackground(Void... params) {
+            while (true) {
+                try {
+                    if (bufferedReader != null && bufferedReader.ready()) {
+                        message = bufferedReader.readLine();
+                        publishProgress(null);
+                    }
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (UnknownHostException e) {
-                Log.e("Connection Error", "Failed to connect to server " + host);
-                e.printStackTrace();
-            } catch (IOException e) {
-                Log.e("Connection Error", "Failed to connect to server " + host);
-                e.printStackTrace();
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ie) {
+                    // Manejar la interrupción del hilo si es necesario
+                }
             }
-            return null;
         }
+
 
         @Override
         protected void onProgressUpdate(Void... values) {
             try {
-                Context context = getApplicationContext();
-                Toast.makeText(context, "Received message: " + message, Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Mensaje recibido: " + message, Toast.LENGTH_LONG).show();
             } catch (Exception e) {
-                e.printStackTrace();
             }
         }
     }
 
     private class Sender extends AsyncTask<Void, Void, Void> {
-        private Socket client;
-
-        public Sender(Socket client) {
-            this.client = client;
-        }
-
         @Override
         protected Void doInBackground(Void... params) {
-            if (printwriter != null) {
-                printwriter.write("message from client" + "\n");
-                printwriter.flush();
-                Log.d("message", "send");
-            } else {
-                Log.e("Connection Error", "PrintWriter is null. Failed to send message to server.");
-            }
+            printwriter.write("Mensaje desde el cliente" + "\n");
+            printwriter.flush();
+            Log.d("Mensaje", "Enviado");
             return null;
         }
-
 
         @Override
         protected void onPostExecute(Void result) {
@@ -128,7 +121,7 @@ public class MainActivity extends Activity {
 
     public void LoadAndSave(View v) {
         pDialog = new ProgressDialog(MainActivity.this);
-        pDialog.setMessage("Loading message. Please wait...");
+        pDialog.setMessage("Cargando mensaje. Por favor, espera...");
         pDialog.setIndeterminate(false);
         pDialog.setCancelable(false);
         pDialog.show();
@@ -136,3 +129,4 @@ public class MainActivity extends Activity {
         chatOperator.execute();
     }
 }
+

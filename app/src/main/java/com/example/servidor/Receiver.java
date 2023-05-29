@@ -21,8 +21,9 @@ class Receiver extends Thread {
             is = new BufferedReader(new InputStreamReader(s.getInputStream()));
             os = new PrintWriter(s.getOutputStream());
         } catch (IOException e) {
-            System.out.println("IO error in server thread");
+            System.out.println("Error de E/S en el subproceso del servidor");
         }
+
         try {
             line = is.readLine();
             while (line.compareTo("QUIT") != 0) {
@@ -33,33 +34,33 @@ class Receiver extends Thread {
                     a.syncDb(s);
                     break;
                 } else {
-                    System.out.println("Response to Client : " + line);
+                    System.out.println("Respuesta al cliente: " + line);
                     line = is.readLine();
                 }
             }
         } catch (IOException e) {
-            line = this.getName();
-            System.out.println("IO Error/ Client " + line + " terminated abruptly");
+            line = this.getName(); // Se reutiliza la variable "line" para obtener el nombre del hilo
+            System.out.println("Error de E/S. Cliente " + line + " terminado abruptamente.");
         } catch (NullPointerException e) {
-            line = this.getName();
-            System.out.println("Client " + line + " Closed");
+            line = this.getName(); // Se reutiliza la variable "line" para obtener el nombre del hilo
+            System.out.println("Cliente " + line + " cerrado.");
         } finally {
             try {
-                System.out.println("Connection Closing..");
+                System.out.println("Cerrando conexión...");
                 if (is != null) {
                     is.close();
-                    System.out.println(" Socket Input Stream Closed");
+                    System.out.println("Flujo de entrada del socket cerrado");
                 }
                 if (os != null) {
                     os.close();
-                    System.out.println("Socket Out Closed");
+                    System.out.println("Flujo de salida del socket cerrado");
                 }
                 if (s != null) {
                     s.close();
-                    System.out.println("Socket Closed");
+                    System.out.println("Socket cerrado");
                 }
             } catch (IOException ie) {
-                System.out.println("Socket Close Error");
+                System.out.println("Error al cerrar el socket");
             }
         }
     }

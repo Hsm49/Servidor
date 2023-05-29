@@ -13,7 +13,7 @@ public class Server {
             ss2 = new ServerSocket(4444);
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("Server. Error.");
+            System.out.println("Server. Error al crear el socket del servidor.");
         }
         while (true) {
             try {
@@ -23,7 +23,7 @@ public class Server {
                 st.start();
             } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println("Conexion. Error.");
+                System.out.println("Error al aceptar la conexión.");
             }
         }
     }

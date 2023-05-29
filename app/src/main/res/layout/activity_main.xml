@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="fill_parent">
+
     <TableLayout
         android:layout_width="fill_parent"
         android:layout_height="172dp"
-        android:stretchColumns="1" >
+        android:stretchColumns="1">
+
         <Button
             android:id="@+id/button1"
             android:layout_width="wrap_content"
@@ -13,6 +15,7 @@
             android:layout_marginBottom="20dp"
             android:layout_marginTop="20dp"
             android:onClick="LoadAndSave"
-            android:text="send a message to server" />
+            android:text="Enviar un mensaje al servidor" />
+
     </TableLayout>
 </ScrollView>
