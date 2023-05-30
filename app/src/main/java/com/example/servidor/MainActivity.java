@@ -13,14 +13,14 @@ public class MainActivity extends Activity {
     private PrintWriter printwriter;
     private BufferedReader bufferedReader;
     private ProgressDialog pDialog;
-    String host = "your_host"; // Reemplaza "your_host" con el host adecuado
+    String host = "172.100.74.123"; // Reemplaza "your_host" con el host adecuado
     int port = 4444; // Cambia el puerto si es necesario
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        host = "your_host"; // Reemplaza "your_host" con el host adecuado
+        host = "172.100.74.123"; // Reemplaza "your_host" con el host adecuado
         port = 4444; // Cambia el puerto si es necesario
     }
 
@@ -46,41 +46,52 @@ public class MainActivity extends Activity {
             return null;
         }
 
-
         @Override
         protected void onPostExecute(Void result) {
             if (client != null) {
-                try {
-                    printwriter = new PrintWriter(client.getOutputStream(), true);
-                    InputStreamReader inputStreamReader = new InputStreamReader(client.getInputStream());
-                    bufferedReader = new BufferedReader(inputStreamReader);
-
-                    final Sender messageSender = new Sender();
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                        messageSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                    } else {
-                        messageSender.execute();
-                    }
-
-                    Receiver receiver = new Receiver();
-                    receiver.execute();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                final Sender messageSender = new Sender();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    messageSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                } else {
+                    messageSender.execute();
                 }
+
+                Receiver receiver = new Receiver();
+                receiver.execute();
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            try {
+                if (printwriter != null) {
+                    printwriter.close();
+                }
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
+                if (client != null) {
+                    client.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
     private class Receiver extends AsyncTask<Void, Void, Void> {
         private String message;
+        private boolean isListening;
 
         @Override
         protected Void doInBackground(Void... params) {
-            while (true) {
+            isListening = true;
+            while (isListening) {
                 try {
                     if (bufferedReader != null && bufferedReader.ready()) {
                         message = bufferedReader.readLine();
-                        publishProgress(null);
+                        publishProgress();
                     }
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
@@ -93,15 +104,20 @@ public class MainActivity extends Activity {
                     // Manejar la interrupción del hilo si es necesario
                 }
             }
+            return null;
         }
-
 
         @Override
         protected void onProgressUpdate(Void... values) {
             try {
                 Toast.makeText(getApplicationContext(), "Mensaje recibido: " + message, Toast.LENGTH_LONG).show();
             } catch (Exception e) {
+                e.printStackTrace();
             }
+        }
+
+        public void stopListening() {
+            isListening = false;
         }
     }
 
@@ -129,4 +145,5 @@ public class MainActivity extends Activity {
         chatOperator.execute();
     }
 }
+
 
