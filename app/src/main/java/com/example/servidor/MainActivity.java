@@ -13,14 +13,14 @@ public class MainActivity extends Activity {
     private PrintWriter printwriter;
     private BufferedReader bufferedReader;
     private ProgressDialog pDialog;
-    String host = "172.100.74.123"; // Reemplaza "your_host" con el host adecuado
+    String host = "172.100.76.45"; // Reemplaza "your_host" con el host adecuado
     int port = 4444; // Cambia el puerto si es necesario
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        host = "172.100.74.123"; // Reemplaza "your_host" con el host adecuado
+        host = "172.100.76.45"; // Reemplaza "your_host" con el host adecuado
         port = 4444; // Cambia el puerto si es necesario
     }
 
